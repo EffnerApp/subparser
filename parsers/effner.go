@@ -47,7 +47,11 @@ func parsePlan(content string) (*Plan, error) {
 	// load information about the plan
 	date := findDate(document)
 	title := findTitle(document)
-	createdAt, _ := findCreatedAt(document) // TODO Handle error if created-at parsing failed? TIME INVALID
+	createdAt, err := findCreatedAt(document)
+
+	if err != nil {
+		return nil, err
+	}
 
 	// load the absent classes
 	absent, err := findAbsent(document)
@@ -188,27 +192,27 @@ func parseDocuments(content string) ([]string, error) {
 		}
 	})
 
-	documentHtml, err := document.Html()
+	docHtml, err := document.Html()
 
 	if err != nil {
 		return nil, err
 	}
 
-	documentSections := make([]string, len(startElements))
+	docSections := make([]string, len(startElements))
 
 	for index, elemHtml := range startElements {
-		elementIndex := strings.Index(documentHtml, elemHtml)
+		elementIndex := strings.Index(docHtml, elemHtml)
 
 		if index == len(startElements)-1 {
 			// last element, just use the remaining HTML
-			documentSections[index] = documentHtml[elementIndex:]
+			docSections[index] = docHtml[elementIndex:]
 		} else {
 			// find the end of the slice by using the start-index of the next documentStart element
-			endIndex := strings.Index(documentHtml, startElements[index+1])
+			endIndex := strings.Index(docHtml, startElements[index+1])
 
 			// create the section using the slice from currentStartIndex->nextStartIndex
-			documentSections[index] = documentHtml[elementIndex:endIndex]
+			docSections[index] = docHtml[elementIndex:endIndex]
 		}
 	}
-	return documentSections, nil
+	return docSections, nil
 }
