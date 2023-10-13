@@ -2,7 +2,6 @@ package parsers
 
 import (
 	"errors"
-	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"strings"
 	"time"
@@ -14,7 +13,7 @@ var ErrElementNotFound = errors.New("element not found")
 type EffnerParser struct {
 }
 
-// Parse Parsing orients on Sebi's implementation in "effnerapp-push-v3"
+// Parse Parsing based on Sebi's implementation in "effnerapp-push-v3"
 // https://github.com/EffnerApp/effnerapp-push-v3/blob/master/src/tools/dsbmobile/index.ts#L150
 func (parser *EffnerParser) Parse(content string) ([]*Plan, error) {
 	documents, err := parseDocuments(content)
@@ -50,21 +49,27 @@ func parsePlan(content string) (*Plan, error) {
 	title := findTitle(document)
 	createdAt, _ := findCreatedAt(document) // TODO Handle error if created-at parsing failed? TIME INVALID
 
-	fmt.Println(date)
-	fmt.Println(title)
-	fmt.Println(createdAt)
-
 	// load the absent classes
 	absent, err := findAbsent(document)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// load the substitutions
 	substitutions, err := findSubstitutions(document)
 
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return &Plan{
+		Title:         title,
+		Date:          date,
+		CreatedAt:     createdAt,
+		Absent:        absent,
+		Substitutions: substitutions,
+	}, nil
 }
 
 func findSubstitutions(document *goquery.Document) ([]Substitution, error) {
@@ -73,10 +78,37 @@ func findSubstitutions(document *goquery.Document) ([]Substitution, error) {
 		// make an array of substitutions
 		substitutions := make([]Substitution, 0)
 
-		// loop through all "tr" elements and parse the entries
-		table.Find("tr.k").Each(func(i int, s *goquery.Selection) {
+		// loop through all "tbody" elements and parse the entries
+		table.Find("tbody.k").Each(func(_ int, tbody *goquery.Selection) {
+			// a tbody might contain one or more "tr.k"-elements. Each tr-element represents one substitution
+			// but only the first tr-element has the class th-element
+			class := strings.TrimSpace(tbody.Find("th.k").Text())
 
+			// now we can parse one or more substitutions from the tr-elements
+			tbody.Find("tr.k").Each(func(_ int, tr *goquery.Selection) {
+				substitution := Substitution{
+					Class: class,
+				}
+
+				// loop td-elements and bind them onto their representing attribute of the substitution
+				tr.Find("td").Each(func(index int, elem *goquery.Selection) {
+					switch index {
+					case 0: // teacher
+						substitution.Teacher = strings.TrimSpace(elem.Text())
+					case 1: // period
+						substitution.Period = strings.TrimSpace(elem.Text())
+					case 2: // substitute
+						substitution.Substitute = strings.TrimSpace(elem.Text())
+					case 3: // room
+						substitution.Room = strings.TrimSpace(elem.Text())
+					case 4: // Info
+						substitution.Info = strings.TrimSpace(elem.Text())
+					}
+				})
+				substitutions = append(substitutions, substitution)
+			})
 		})
+		return substitutions, nil
 	}
 	return nil, ErrElementNotFound
 }
