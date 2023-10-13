@@ -14,3 +14,7 @@ subparser.exe [-P/--parser <parser>] [-u/--user <dsb username>] [-p/--password <
 ## Parsers
 - Effner DSB
 - Effner.DE
+
+
+#### Work done
+- 13.10. about 4-5h
