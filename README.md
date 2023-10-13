@@ -3,7 +3,7 @@ Internal tool for the EffnerApp that can load substitution plans from different 
 
 ## Usage
 ```
-subparser.exe -s/--source <source> [-d/--destination <destination>] [-P/--parser <parser>] [-u/--user <dsb username>] [-p/--password <dsb/effner.de password] [-i/--input <input file path>] [-o/--o <output file path>]
+subparser.exe -s/--source <source> [-d/--destination <destination>] [-P/--parser <parser>] [-u/--user <dsb username>] [-p/--password <dsb/effner.de password] [-i/--input <input file path>] [-o/--output <output file path>]
 ```
 
 ## Sources
