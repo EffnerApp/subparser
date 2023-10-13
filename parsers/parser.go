@@ -3,7 +3,7 @@ package parsers
 import "time"
 
 type Parser interface {
-	Parse(content string) ([]Plan, error)
+	Parse(content string) ([]*Plan, error)
 }
 
 type Plan struct {
@@ -23,7 +23,7 @@ type Substitution struct {
 	Class      string `json:"class"`
 	Teacher    string `json:"teacher"`
 	Period     string `json:"period"`
-	Substitute string `json:"substitute"`
-	Room       string `json:"room"`
-	Info       string `json:"info"`
+	Substitute string `json:"substitute,omitempty"`
+	Room       string `json:"room,omitempty"`
+	Info       string `json:"info,omitempty"`
 }
