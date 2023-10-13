@@ -5,14 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mkideal/cli"
-	"io"
 	"net/http"
-	"net/http/cookiejar"
-	"net/url"
 	"os"
-	"strings"
-	"subparser/dsb"
 	"subparser/parsers"
+	"subparser/source"
 )
 
 const (
@@ -46,6 +42,26 @@ func getParser(parser string) parsers.Parser {
 	}
 }
 
+func getSource(argv *arguments) source.Source {
+	switch argv.Source {
+	case "dsb":
+		return &source.DSBSource{
+			User: argv.User,
+			Pass: argv.Pass,
+		}
+	case "file":
+		return &source.FileSource{
+			Path: argv.Input,
+		}
+	case "effner":
+		return &source.EffnerDESource{
+			Password: argv.Pass,
+		}
+	default:
+		return nil
+	}
+}
+
 func handle(error error, exit int) {
 	fmt.Println("Error: ", error.Error())
 	os.Exit(exit)
@@ -58,9 +74,6 @@ func main() {
 		argv := ctx.Argv().(*arguments)
 
 		parserName := argv.Parser
-
-		dsbUser := argv.User
-		dsbPass := argv.Pass
 
 		// validate and load parser
 		if parserName == "" {
@@ -75,101 +88,18 @@ func main() {
 		// we can only log to SYSOUT if we don't use it to transport the result
 		canLog := argv.Output != ""
 
+		src := getSource(argv)
+
+		if src == nil {
+			fmt.Println("Error: Source not found! Allowed: effner, dsb, file")
+			os.Exit(ExitLoadingFailed)
+		}
+
 		// prepare the data to parse
-		var data string
+		data, err := src.Load()
 
-		if argv.Source == "file" {
-			// load data from file
-			content, err := os.ReadFile(argv.Input)
-
-			if err != nil {
-				handle(err, ExitFileReadFailed)
-			}
-
-			data = string(content)
-		} else if argv.Source == "dsb" {
-			if argv.User == "" || argv.Pass == "" {
-				fmt.Println("Error: DSB-Source requires credentials!")
-				os.Exit(ExitInvalidArgs)
-			}
-
-			// load the data from DSB
-			dsbInstance := dsb.NewDSB(dsbUser, dsbPass)
-
-			err := dsbInstance.Login()
-
-			if err != nil {
-				handle(err, ExitDSBLoginFailed)
-			}
-
-			err = dsbInstance.LoadTimetables()
-
-			if err != nil {
-				handle(err, ExitLoadingFailed)
-			}
-
-			// get the document from the dsb instance
-			document := dsbInstance.Documents[0].Children[0]
-			content, err := document.Download()
-
-			if err != nil {
-				handle(err, ExitLoadingFailed)
-			}
-
-			data = string(content)
-		} else if argv.Source == "effner" {
-			if argv.Pass == "" {
-				fmt.Println("Error: Effner-Source requires password!")
-				os.Exit(ExitInvalidArgs)
-			}
-
-			if argv.Parser != "effner-de" {
-				fmt.Println("Error: Effner-Source only works with effner-de parser!")
-				os.Exit(ExitInvalidArgs)
-			}
-
-			// TODO Move this somewhere else.
-			form := url.Values{}
-			form.Add("post_password", argv.Pass)
-
-			// load the html from effner.de
-			req, err := http.NewRequest("POST", "https://effner.de/wp-login.php?action=postpass", strings.NewReader(form.Encode()))
-
-			if err != nil {
-				handle(err, ExitLoadingFailed)
-			}
-
-			req.Header.Set("Referer", "https://effner.de/service/vertretungsplan/")
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-			jar, err := cookiejar.New(nil)
-
-			httpClient := &http.Client{
-				Jar: jar,
-			}
-
-			res, err := httpClient.Do(req)
-
-			if err != nil {
-				handle(err, ExitLoadingFailed)
-			}
-
-			link := res.Header.Get("Link")
-			linkParts := strings.Split(link, ",")
-
-			final := strings.Split(linkParts[1], ";")[0]
-			final = final[2 : len(final)-1]
-
-			req, err = http.NewRequest("GET", final, nil)
-			res, err = httpClient.Do(req)
-
-			body, err := io.ReadAll(res.Body)
-
-			if err != nil {
-				handle(err, ExitLoadingFailed)
-			}
-
-			data = string(body)
+		if err != nil {
+			handle(err, ExitLoadingFailed)
 		}
 
 		plans, err := parser.Parse(data)
