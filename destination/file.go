@@ -3,14 +3,14 @@ package destination
 import (
 	"encoding/json"
 	"os"
-	"subparser/parsers"
+	"subparser/model"
 )
 
 type FileDestination struct {
 	Path string
 }
 
-func (dest *FileDestination) Write(plans []*parsers.Plan) error {
+func (dest *FileDestination) Write(plans []*model.Plan) error {
 	plansJson, err := json.Marshal(plans)
 
 	if err != nil {
