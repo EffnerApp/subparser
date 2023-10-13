@@ -1,4 +1,4 @@
-module github.com/EffnerApp/subparser
+module subparser
 
 go 1.19
 
