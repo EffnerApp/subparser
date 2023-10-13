@@ -2,33 +2,34 @@ package main
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"github.com/mkideal/cli"
 	"net/http"
 	"os"
+	"subparser/destination"
 	"subparser/parsers"
 	"subparser/source"
 )
 
 const (
-	ExitInvalidArgs       = 1
-	ExitParserNotFound    = 2
-	ExitFileReadFailed    = 3
-	ExitDSBLoginFailed    = 4
-	ExitLoadingFailed     = 5
-	ExitParsingFailed     = 5
-	ExitFileWritingFailed = 6
+	ExitInvalidArgs    = 1
+	ExitParserNotFound = 2
+	ExitFileReadFailed = 3
+	ExitDSBLoginFailed = 4
+	ExitLoadingFailed  = 5
+	ExitParsingFailed  = 5
+	ExitWritingFailed  = 6
 )
 
 type arguments struct {
 	cli.Helper
-	Parser string `cli:"parser,P" usage:"name of the parser to use (default: effner) [effner, effner-de]"`
-	Input  string `cli:"input,i" usage:"input file (required if source is file)"`
-	Source string `cli:"source,s" usage:"source for the data (default: file) [file,dsb,effner]"`
-	User   string `cli:"user,u" usage:"username"`
-	Pass   string `cli:"pass,p" usage:"password"`
-	Output string `cli:"output,o" usage:"file to output parsed data to (if unset SYSOUT is used)"`
+	Parser      string `cli:"parser,P" usage:"name of the parser to use (default: effner) [effner, effner-de]"`
+	Input       string `cli:"input,i" usage:"input file (required if source is file)"`
+	Source      string `cli:"source,s" usage:"source for the data (default: file) [file,dsb,effner]"`
+	Destination string `cli:"destination,d" usage:"destination where to put the parsed data, (default: sysout) [file]"`
+	User        string `cli:"user,u" usage:"username"`
+	Pass        string `cli:"pass,p" usage:"password"`
+	Output      string `cli:"output,o" usage:"file to output parsed data to (if unset SYSOUT is used)"`
 }
 
 func getParser(parser string) parsers.Parser {
@@ -62,6 +63,17 @@ func getSource(argv *arguments) source.Source {
 	}
 }
 
+func getDestination(argv *arguments) destination.Destination {
+	switch argv.Destination {
+	case "file":
+		return &destination.FileDestination{
+			Path: argv.Input,
+		}
+	default:
+		return &destination.SysoutDestination{}
+	}
+}
+
 func handle(error error, exit int) {
 	fmt.Println("Error: ", error.Error())
 	os.Exit(exit)
@@ -86,13 +98,20 @@ func main() {
 		}
 
 		// we can only log to SYSOUT if we don't use it to transport the result
-		canLog := argv.Output != ""
+		canLog := argv.Destination != "sysout" && argv.Destination != ""
 
 		src := getSource(argv)
 
 		if src == nil {
 			fmt.Println("Error: Source not found! Allowed: effner, dsb, file")
-			os.Exit(ExitLoadingFailed)
+			os.Exit(ExitInvalidArgs)
+		}
+
+		dest := getDestination(argv)
+
+		if dest == nil {
+			fmt.Println("Error: Destination not found! Allowed: file")
+			os.Exit(ExitInvalidArgs)
 		}
 
 		// prepare the data to parse
@@ -112,28 +131,10 @@ func main() {
 			fmt.Println("Parsing completed, Yay!")
 		}
 
-		plansJson, err := json.Marshal(plans)
+		err = dest.Write(plans)
 
 		if err != nil {
-			handle(err, ExitParsingFailed)
-		}
-
-		if argv.Output == "" {
-			fmt.Println(string(plansJson))
-			os.Exit(0)
-		}
-
-		// write output to file
-		file, err := os.Create(argv.Output)
-
-		if err != nil {
-			handle(err, ExitFileWritingFailed)
-		}
-		defer file.Close()
-
-		_, err = file.Write(plansJson)
-		if err != nil {
-			handle(err, ExitFileWritingFailed)
+			handle(err, ExitWritingFailed)
 		}
 
 		return nil
