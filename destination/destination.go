@@ -1,7 +1,9 @@
 package destination
 
-import "subparser/parsers"
+import (
+	"subparser/model"
+)
 
 type Destination interface {
-	Write(plans []*parsers.Plan) error
+	Write(plans []*model.Plan) error
 }

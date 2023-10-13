@@ -4,25 +4,26 @@ import (
 	"errors"
 	"github.com/PuerkitoBio/goquery"
 	"strings"
+	"subparser/model"
 	"time"
 )
 
 var ErrElementNotFound = errors.New("element not found")
 
-// EffnerDSBParser uses https://github.com/PuerkitoBio/goquery to parse HTML into a substitution plan
+// EffnerDSBParser uses https://github.com/PuerkitoBio/goquery to parse HTML into a substitution model
 type EffnerDSBParser struct {
 }
 
 // Parse Parsing based on Sebi's implementation in "effnerapp-push-v3"
 // https://github.com/EffnerApp/effnerapp-push-v3/blob/master/src/tools/dsbmobile/index.ts#L150
-func (parser *EffnerDSBParser) Parse(content string) ([]*Plan, error) {
+func (parser *EffnerDSBParser) Parse(content string) ([]*model.Plan, error) {
 	documents, err := parseDocuments(content)
 
 	if err != nil {
 		return nil, err
 	}
 
-	plans := make([]*Plan, len(documents))
+	plans := make([]*model.Plan, len(documents))
 
 	for index, docHtml := range documents {
 		plan, err := parsePlan(docHtml)
@@ -37,14 +38,14 @@ func (parser *EffnerDSBParser) Parse(content string) ([]*Plan, error) {
 	return plans, nil
 }
 
-func parsePlan(content string) (*Plan, error) {
+func parsePlan(content string) (*model.Plan, error) {
 	document, err := goquery.NewDocumentFromReader(strings.NewReader(content))
 
 	if err != nil {
 		return nil, err
 	}
 
-	// load information about the plan
+	// load information about the model
 	date := findDate(document)
 	title := findTitle(document)
 	createdAt, err := findCreatedAt(document)
@@ -67,7 +68,7 @@ func parsePlan(content string) (*Plan, error) {
 		return nil, err
 	}
 
-	return &Plan{
+	return &model.Plan{
 		Title:         title,
 		Date:          date,
 		CreatedAt:     createdAt,
@@ -76,11 +77,11 @@ func parsePlan(content string) (*Plan, error) {
 	}, nil
 }
 
-func findSubstitutions(document *goquery.Document) ([]Substitution, error) {
+func findSubstitutions(document *goquery.Document) ([]model.Substitution, error) {
 	table := document.Find("table.k")
 	if table != nil {
 		// make an array of substitutions
-		substitutions := make([]Substitution, 0)
+		substitutions := make([]model.Substitution, 0)
 
 		// loop through all "tbody" elements and parse the entries
 		table.Find("tbody.k").Each(func(_ int, tbody *goquery.Selection) {
@@ -90,7 +91,7 @@ func findSubstitutions(document *goquery.Document) ([]Substitution, error) {
 
 			// now we can parse one or more substitutions from the tr-elements
 			tbody.Find("tr.k").Each(func(_ int, tr *goquery.Selection) {
-				substitution := Substitution{
+				substitution := model.Substitution{
 					Class: class,
 				}
 
@@ -117,10 +118,10 @@ func findSubstitutions(document *goquery.Document) ([]Substitution, error) {
 	return nil, ErrElementNotFound
 }
 
-func findAbsent(document *goquery.Document) ([]Absent, error) {
+func findAbsent(document *goquery.Document) ([]model.Absent, error) {
 	table := document.Find("table.K")
 	if table != nil {
-		absents := make([]Absent, 0)
+		absents := make([]model.Absent, 0)
 
 		table.Find("tr.K").Each(func(i int, s *goquery.Selection) {
 			// parse an absent out of the tbody selection
@@ -128,7 +129,7 @@ func findAbsent(document *goquery.Document) ([]Absent, error) {
 			class := strings.TrimSpace(s.Find("th.K").Text())
 			periods := strings.TrimSpace(s.Find("td").Text())
 
-			absents = append(absents, Absent{
+			absents = append(absents, model.Absent{
 				Class:   class,
 				Periods: periods,
 			})
@@ -181,7 +182,7 @@ func parseDocuments(content string) ([]string, error) {
 
 	startElements := make([]string, 0)
 
-	// try to find the DATE tags, which are basically the sign for the start of a new "plan"
+	// try to find the DATE tags, which are basically the sign for the start of a new "model"
 	document.Find("a[name]").Each(func(i int, s *goquery.Selection) {
 		name, exists := s.Attr("name")
 		if exists && name != "oben" {

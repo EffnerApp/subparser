@@ -3,12 +3,12 @@ package destination
 import (
 	"encoding/json"
 	"fmt"
-	"subparser/parsers"
+	"subparser/model"
 )
 
 type SysoutDestination struct{}
 
-func (*SysoutDestination) Write(plans []*parsers.Plan) error {
+func (*SysoutDestination) Write(plans []*model.Plan) error {
 	plansJson, err := json.Marshal(plans)
 
 	if err != nil {

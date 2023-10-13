@@ -3,21 +3,22 @@ package parsers
 import (
 	"github.com/PuerkitoBio/goquery"
 	"strings"
+	"subparser/model"
 )
 
-// EffnerDEParser uses https://github.com/PuerkitoBio/goquery to parse HTML into a substitution plan
+// EffnerDEParser uses https://github.com/PuerkitoBio/goquery to parse HTML into a substitution model
 type EffnerDEParser struct {
 }
 
 // Parse parsing the substitutions from effner.de
-func (parser *EffnerDEParser) Parse(content string) ([]*Plan, error) {
+func (parser *EffnerDEParser) Parse(content string) ([]*model.Plan, error) {
 	document, err := goquery.NewDocumentFromReader(strings.NewReader(content))
 
 	if err != nil {
 		return nil, err
 	}
 
-	plans := make([]*Plan, 0)
+	plans := make([]*model.Plan, 0)
 
 	document.Find("h3").Each(func(i int, s *goquery.Selection) {
 		title := s.Text()
@@ -25,10 +26,10 @@ func (parser *EffnerDEParser) Parse(content string) ([]*Plan, error) {
 		dateParts := strings.Split(title, " ")
 		date := dateParts[len(dateParts)-1]
 
-		plan := Plan{
+		plan := model.Plan{
 			Title:         title,
 			Date:          date,
-			Substitutions: make([]Substitution, 0),
+			Substitutions: make([]model.Substitution, 0),
 		}
 
 		// find the next table
@@ -49,7 +50,7 @@ func (parser *EffnerDEParser) Parse(content string) ([]*Plan, error) {
 				return
 			}
 
-			substitution := Substitution{}
+			substitution := model.Substitution{}
 			tr.Find("td").Each(func(i int, elem *goquery.Selection) {
 				switch i {
 				case 0:
