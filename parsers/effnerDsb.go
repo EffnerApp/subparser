@@ -9,13 +9,13 @@ import (
 
 var ErrElementNotFound = errors.New("element not found")
 
-// EffnerParser uses https://github.com/PuerkitoBio/goquery to parse HTML into a substitution plan
-type EffnerParser struct {
+// EffnerDSBParser uses https://github.com/PuerkitoBio/goquery to parse HTML into a substitution plan
+type EffnerDSBParser struct {
 }
 
 // Parse Parsing based on Sebi's implementation in "effnerapp-push-v3"
 // https://github.com/EffnerApp/effnerapp-push-v3/blob/master/src/tools/dsbmobile/index.ts#L150
-func (parser *EffnerParser) Parse(content string) ([]*Plan, error) {
+func (parser *EffnerDSBParser) Parse(content string) ([]*Plan, error) {
 	documents, err := parseDocuments(content)
 
 	if err != nil {
