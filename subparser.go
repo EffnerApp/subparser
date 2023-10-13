@@ -10,12 +10,13 @@ import (
 )
 
 const (
-	ExitInvalidArgs      = 1
-	ExitParserNotFound   = 2
-	ExitFileReadFailed   = 3
-	ExitDSBLoginFailed   = 4
-	EXITDSBLoadingFailed = 5
-	ExitParsingFailed    = 5
+	ExitInvalidArgs       = 1
+	ExitParserNotFound    = 2
+	ExitFileReadFailed    = 3
+	ExitDSBLoginFailed    = 4
+	EXITDSBLoadingFailed  = 5
+	ExitParsingFailed     = 5
+	ExitFileWritingFailed = 6
 )
 
 type arguments struct {
@@ -136,6 +137,17 @@ func main() {
 		}
 
 		// write output to file
+		file, err := os.Create(argv.Output)
+
+		if err != nil {
+			handle(err, ExitFileWritingFailed)
+		}
+		defer file.Close()
+
+		_, err = file.Write(plansJson)
+		if err != nil {
+			handle(err, ExitFileWritingFailed)
+		}
 
 		return nil
 	}))
