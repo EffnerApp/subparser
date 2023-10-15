@@ -21,13 +21,27 @@ func (parser *EffnerDEParser) Parse(content string) ([]*Plan, error) {
 
 	document.Find("h3").Each(func(i int, s *goquery.Selection) {
 		title := s.Text()
+
+		dateParts := strings.Split(title, " ")
+		date := dateParts[len(dateParts)-1]
+
 		plan := Plan{
 			Title:         title,
+			Date:          date,
 			Substitutions: make([]Substitution, 0),
 		}
 
 		// find the next table
-		table := document.AfterSelection(s).Find("table").First()
+		table := document.Find("table")
+
+		// TODO kinda dumb, there has to be a better way for this...
+		for x := 0; x < i; x++ {
+			table = table.NextAll()
+		}
+
+		if i == 0 {
+			table = table.First()
+		}
 
 		table.Find("tr").Each(func(i int, tr *goquery.Selection) {
 			// skip the first, that's the table header
