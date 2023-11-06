@@ -145,7 +145,7 @@ func findCreatedAt(document *goquery.Document) (time.Time, error) {
 		text = text[11:strings.Index(text, ")")]
 
 		// parse the text into a date-time
-		date, err := time.Parse("02.01.2006 um 15:04 Uhr", text)
+		date, err := time.Parse("_2.01.2006 um 15:04 Uhr", text)
 
 		if err != nil {
 			return time.Now(), err
