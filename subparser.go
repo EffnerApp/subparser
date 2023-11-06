@@ -67,7 +67,7 @@ func getDestination(argv *arguments) destination.Destination {
 	switch argv.Destination {
 	case "file":
 		return &destination.FileDestination{
-			Path: argv.Input,
+			Path: argv.Output,
 		}
 	default:
 		return &destination.SysoutDestination{}
