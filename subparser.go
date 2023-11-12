@@ -1,13 +1,11 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/EffnerApp/subparser/destination"
 	"github.com/EffnerApp/subparser/parsers"
 	"github.com/EffnerApp/subparser/source"
 	"github.com/mkideal/cli"
-	"net/http"
 	"os"
 )
 
@@ -80,8 +78,6 @@ func handle(error error, exit int) {
 }
 
 func main() {
-	// TODO REMOVE THIS REMOVE THIS THIS IS NOT WHAT WE DO USUALLY I SWEAR
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	os.Exit(cli.Run(new(arguments), func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*arguments)
 
