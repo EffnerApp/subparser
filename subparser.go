@@ -93,8 +93,8 @@ func main() {
 			os.Exit(ExitParserNotFound)
 		}
 
-		// we can only log to SYSOUT if we don't use it to transport the result
-		canLog := argv.Destination != "sysout" && argv.Destination != ""
+		// we can only log to STDOUT if we don't use it to transport the result
+		canLog := argv.Destination != "stdout" && argv.Destination != ""
 
 		src := getSource(argv)
 
