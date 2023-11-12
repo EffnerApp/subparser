@@ -2,9 +2,9 @@ package parsers
 
 import (
 	"errors"
+	"github.com/EffnerApp/subparser/model"
 	"github.com/PuerkitoBio/goquery"
 	"strings"
-	"subparser/model"
 	"time"
 )
 

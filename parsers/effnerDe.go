@@ -1,9 +1,9 @@
 package parsers
 
 import (
+	"github.com/EffnerApp/subparser/model"
 	"github.com/PuerkitoBio/goquery"
 	"strings"
-	"subparser/model"
 )
 
 // EffnerDEParser uses https://github.com/PuerkitoBio/goquery to parse HTML into a substitution model

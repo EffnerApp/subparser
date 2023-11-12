@@ -3,12 +3,12 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/EffnerApp/subparser/destination"
+	"github.com/EffnerApp/subparser/parsers"
+	"github.com/EffnerApp/subparser/source"
 	"github.com/mkideal/cli"
 	"net/http"
 	"os"
-	"subparser/destination"
-	"subparser/parsers"
-	"subparser/source"
 )
 
 const (

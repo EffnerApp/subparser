@@ -1,6 +1,6 @@
 package source
 
-import "subparser/dsb"
+import "github.com/EffnerApp/subparser/dsb"
 
 // DSBSource TODO Configuration like "load all plans", filter plans etc
 type DSBSource struct {

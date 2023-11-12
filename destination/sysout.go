@@ -3,7 +3,7 @@ package destination
 import (
 	"encoding/json"
 	"fmt"
-	"subparser/model"
+	"github.com/EffnerApp/subparser/model"
 )
 
 type SysoutDestination struct{}

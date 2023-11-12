@@ -2,8 +2,8 @@ package destination
 
 import (
 	"encoding/json"
+	"github.com/EffnerApp/subparser/model"
 	"os"
-	"subparser/model"
 )
 
 type FileDestination struct {

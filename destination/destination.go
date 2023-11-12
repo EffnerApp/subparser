@@ -1,7 +1,7 @@
 package destination
 
 import (
-	"subparser/model"
+	"github.com/EffnerApp/subparser/model"
 )
 
 type Destination interface {
