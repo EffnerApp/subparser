@@ -7,6 +7,7 @@ type Plan struct {
 	Date          string         `json:"date" bson:"date"`
 	CreatedAt     time.Time      `json:"created_at" bson:"created_at"`
 	Absent        []Absent       `json:"absent" bson:"absent"`
+	Infos         []string       `json:"infos" bson:"infos"`
 	Substitutions []Substitution `json:"substitutions" bson:"substitutions"`
 }
 

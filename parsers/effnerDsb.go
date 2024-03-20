@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/EffnerApp/subparser/model"
 	"github.com/PuerkitoBio/goquery"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -61,6 +62,12 @@ func parsePlan(content string) (*model.Plan, error) {
 		return nil, err
 	}
 
+	// load the infos
+	infos, err := findInfos(document)
+	if err != nil {
+		return nil, err
+	}
+
 	// load the substitutions
 	substitutions, err := findSubstitutions(document)
 
@@ -73,8 +80,48 @@ func parsePlan(content string) (*model.Plan, error) {
 		Date:          date,
 		CreatedAt:     createdAt,
 		Absent:        absent,
+		Infos:         infos,
 		Substitutions: substitutions,
 	}, nil
+}
+
+func findInfos(document *goquery.Document) ([]string, error) {
+	table := document.Find("table.F")
+
+	if table == nil {
+		return []string{}, nil
+	}
+
+	table = table.First()
+
+	if table == nil {
+		return []string{}, nil
+	}
+
+	infos := make([]string, 0)
+
+	space := regexp.MustCompile(`\s+`)
+
+	// very ugly but works...
+	table.Find("th.F").Each(func(_ int, th *goquery.Selection) {
+		text := th.Text()
+		text = strings.TrimPrefix(text, "\n")
+
+		if text == "" {
+			return
+		}
+
+		text = strings.Replace(text, "\t", " ", -1)
+
+		// some strange character they for some reason contain. Never touch this.
+		text = strings.Replace(text, " ", " ", -1)
+
+		text = strings.TrimSpace(text)
+		text = space.ReplaceAllString(text, " ")
+
+		infos = append(infos, text)
+	})
+	return infos, nil
 }
 
 func findSubstitutions(document *goquery.Document) ([]model.Substitution, error) {
@@ -146,7 +193,7 @@ func findCreatedAt(document *goquery.Document) (time.Time, error) {
 		text = text[11:strings.Index(text, ")")]
 
 		// parse the text into a date-time
-		date, err := time.Parse("_2.01.2006 um 15:04 Uhr", text)
+		date, err := time.Parse("_2.1.2006 um 15:04 Uhr", text)
 
 		if err != nil {
 			return time.Now(), err
